@@ -25,16 +25,16 @@ DEFAULT_LOCALE_PATH = os.path.join(ROOT_PATH, "app/locales/taiga/locale-en.json"
 
 
 def keywords(key, value):
-    if key is not None and not isinstance(value, dict):
-        return [(".".join(key), value)]
+    if key is not None:
+        if not isinstance(value, dict):
+            return [(".".join(key), value)]
 
-    if key is not None and isinstance(value, dict):
         kws = []
         for item_key in value.keys():
             kws += keywords(key+[item_key], value[item_key])
         return kws
 
-    if key is None and isinstance(value, dict):
+    if isinstance(value, dict):
         kws = []
         for item_key in value.keys():
             kws += keywords([item_key], value[item_key])
@@ -61,19 +61,15 @@ def verify_similarity(threshold, min_length, omit_identical):
             if omit_identical and similarity == 1.0:
                 continue
 
-            if similarity >= threshold:
-                if (key1, key2) not in already_shown_keys:
-                    already_shown_keys.add((key1, key2))
-                    already_shown_keys.add((key2, key1))
-                    click.echo(
-                        "The keys {} and {} has a similarity of {}\n - {}\n - {}".format(
-                            key1,
-                            key2,
-                            similarity,
-                            value1,
-                            value2
-                        )
-                    )
+            if (
+                similarity >= threshold
+                and (key1, key2) not in already_shown_keys
+            ):
+                already_shown_keys.add((key1, key2))
+                already_shown_keys.add((key2, key1))
+                click.echo(
+                    f"The keys {key1} and {key2} has a similarity of {similarity}\n - {value1}\n - {value2}"
+                )
 
 if __name__ == "__main__":
     verify_similarity()

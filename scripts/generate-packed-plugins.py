@@ -18,33 +18,30 @@
 import os
 import json
 
-plugins = []
-for f in os.listdir("./dist/plugins"):
-    if f != "packed":
-        plugins.append(json.load(open("./dist/plugins/{}/{}.json".format(f,f))))
+plugins = [
+    json.load(open(f"./dist/plugins/{f}/{f}.json"))
+    for f in os.listdir("./dist/plugins")
+    if f != "packed"
+]
 
 js = ""
 css = ""
 for plugin in plugins:
     if "js" in plugin:
-        js += open("./dist{}".format(plugin['js']), "r").read()
+        js += open(f"./dist{plugin['js']}", "r").read()
         js += "\n";
         del plugin["js"]
     if "css" in plugin:
-        css += open("./dist{}".format(plugin['css']), "r").read()
+        css += open(f"./dist{plugin['css']}", "r").read()
         css += "\n";
         del plugin["css"]
 
 os.makedirs("./dist/plugins/packed", exist_ok=True)
 
-plugins_js_file = open("./dist/plugins/packed/plugins.js", "w")
-plugins_js_file.write(js)
-plugins_js_file.close()
-
-plugins_css_file = open("./dist/plugins/packed/plugins.css", "w")
-plugins_css_file.write(css)
-plugins_css_file.close()
-
+with open("./dist/plugins/packed/plugins.js", "w") as plugins_js_file:
+    plugins_js_file.write(js)
+with open("./dist/plugins/packed/plugins.css", "w") as plugins_css_file:
+    plugins_css_file.write(css)
 packedPlugin = {
     "isPack": True,
     "js": "/plugins/packed/plugins.js",
@@ -52,6 +49,5 @@ packedPlugin = {
     "plugins": plugins
 }
 
-plugins_json_file = open("./dist/plugins/packed/packed.json", "w")
-json.dump(packedPlugin, plugins_json_file)
-plugins_json_file.close()
+with open("./dist/plugins/packed/packed.json", "w") as plugins_json_file:
+    json.dump(packedPlugin, plugins_json_file)

@@ -36,16 +36,16 @@ WHITELIST = [
 
 
 def keywords(key, value):
-    if key is not None and not isinstance(value, dict):
-        return [".".join(key)]
+    if key is not None:
+        if not isinstance(value, dict):
+            return [".".join(key)]
 
-    if key is not None and isinstance(value, dict):
         kws = []
         for item_key in value.keys():
             kws += keywords(key+[item_key], value[item_key])
         return kws
 
-    if key is None and isinstance(value, dict):
+    if isinstance(value, dict):
         kws = []
         for item_key in value.keys():
             kws += keywords([item_key], value[item_key])
@@ -60,10 +60,7 @@ def read_file(path):
 def check_keyword(keyword, files_text):
     if keyword in WHITELIST:
         return True
-    for text in files_text:
-        if text.find(keyword) != -1:
-            return True
-    return False
+    return any(text.find(keyword) != -1 for text in files_text)
 
 
 def verify_keywords_usage():
@@ -79,7 +76,7 @@ def verify_keywords_usage():
 
     for keyword in keywords(None, locales):
         if not check_keyword(keyword, all_files_text):
-            print("Keyword unused: {}".format(keyword))
+            print(f"Keyword unused: {keyword}")
 
 
 if __name__ == "__main__":

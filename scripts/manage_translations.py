@@ -48,21 +48,14 @@ SOURCE_LANG = "en"
 
 def _tx_resource_for_name(name):
     """ Return the Transifex resource name """
-    return "taiga-front.{}".format(name)
+    return f"taiga-front.{name}"
 
 
 def fetch(resources=None, languages=None):
     """
     Fetch translations from Transifex.
     """
-    if not resources:
-        if languages is None:
-            call("tx pull -f --minimum-perc=5", shell=True)
-        else:
-            for lang in languages:
-                call("tx pull -f -l {lang}".format(lang=lang), shell=True)
-
-    else:
+    if resources:
         for resource in resources:
             if languages is None:
                 call("tx pull -r {res} -f --minimum-perc=5".format(res=_tx_resource_for_name(resource)),
@@ -72,18 +65,18 @@ def fetch(resources=None, languages=None):
                     call("tx pull -r {res} -f -l {lang}".format(res=_tx_resource_for_name(resource), lang=lang),
                          shell=True)
 
+    elif languages is None:
+        call("tx pull -f --minimum-perc=5", shell=True)
+    else:
+        for lang in languages:
+            call("tx pull -f -l {lang}".format(lang=lang), shell=True)
+
 
 def commit(resources=None, languages=None):
     """
     Commit messages to Transifex,
     """
-    if not resources:
-        if languages is None:
-            call("tx push -s -l {lang}".format(lang=SOURCE_LANG), shell=True)
-        else:
-            for lang in languages:
-                call("tx push -t -l {lang}".format(lang=lang), shell=True)
-    else:
+    if resources:
         for resource in resources:
             # Transifex push
             if languages is None:
@@ -93,12 +86,18 @@ def commit(resources=None, languages=None):
                     type = "-s" if lang == SOURCE_LANG else "-t"
                     call("tx push -r {res} -l {lang} {type}".format(res= _tx_resource_for_name(resource), lang=lang, type=type), shell=True)
 
+    elif languages is None:
+        call("tx push -s -l {lang}".format(lang=SOURCE_LANG), shell=True)
+    else:
+        for lang in languages:
+            call("tx push -t -l {lang}".format(lang=lang), shell=True)
+
 
 if __name__ == "__main__":
     try:
         devnull = open(os.devnull)
         Popen(["tx"], stdout=devnull, stderr=devnull).communicate()
-    except (OSError, ) as e:
+    except OSError as e:
         if e.errno == errno.ENOENT:
             print("""
 You need transifex-client, install it.
@@ -134,7 +133,7 @@ You need transifex-client, install it.
         help="limit operation to the specified languages")
     options = parser.parse_args()
 
-    if options.cmd[0] in RUNABLE_SCRIPTS.keys():
+    if options.cmd[0] in RUNABLE_SCRIPTS:
         eval(options.cmd[0])(options.resources, options.languages)
     else:
-        print("Available commands are: {}".format(", ".join(RUNABLE_SCRIPTS.keys())))
+        print(f'Available commands are: {", ".join(RUNABLE_SCRIPTS.keys())}')
